@@ -6,7 +6,10 @@ const connect = require('./db/connect');
 
 const app = express();
 
-app.use('/', require('./routes/auth.routes'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }))
+
+app.use('/api/v1', require('./routes/auth.routes'));
 app.use(notFound);
 app.use(erroHander);
 
