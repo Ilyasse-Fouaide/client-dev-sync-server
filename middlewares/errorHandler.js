@@ -1,7 +1,8 @@
 const { StatusCodes } = require("http-status-codes");
+const CustomError = require("../customError/customError");
 
 module.exports = (err, req, res, next) => {
-  if (err.status == 404) {
+  if (err instanceof CustomError) {
     return res.status(err.status).json({ message: err.message, status: err.status });
   };
 

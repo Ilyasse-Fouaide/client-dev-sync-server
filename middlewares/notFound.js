@@ -1,5 +1,5 @@
-const notFound = require("../customError/notFoundError");
+const Error = require("../customError");
 
 module.exports = (req, res, next) => {
-  next(notFound(`url ${req.url} Not Found!.`));
+  next(Error.notFound(`url ${req.url} Not Found!.`));
 };
