@@ -4,7 +4,6 @@ const Error = require('../customError');
 const { StatusCodes } = require('http-status-codes');
 const config = require('../config');
 
-
 exports.register = tryCatchWrapper(async (req, res, next) => {
   const user = new User(req.body);
 
@@ -37,3 +36,17 @@ exports.login = tryCatchWrapper(async (req, res, next) => {
   res.status(StatusCodes.OK).json({ body: req.body, token: user.genRefreshToken() });
 });
 
+module.exports.logout = (req, res) => {
+  //clear cookie
+  res
+    .status(StatusCodes.OK)
+    .cookie('refresh_token', '', {
+      httpOnly: true,
+      expires: new Date(Date.now())  // expires now
+    })
+    .json({ success: true });
+}
+
+exports.profile = tryCatchWrapper(async (req, res, next) => {
+  res.status(StatusCodes.OK).json(req.user);
+});
