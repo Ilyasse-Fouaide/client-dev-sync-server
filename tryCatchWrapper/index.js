@@ -3,7 +3,7 @@ const tryCatchWrapper = (cb) => {
     try {
       await cb(req, res, next);
     } catch (error) {
-      console.log(error)
+      console.log("tryCatchError: " + error)
       next(error);
     }
   }

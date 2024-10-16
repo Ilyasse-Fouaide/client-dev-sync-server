@@ -12,4 +12,10 @@ module.exports = (err, req, res, next) => {
     const message = Object.assign({}, ...errors)
     res.status(StatusCodes.BAD_REQUEST).json(message)
   }
+
+  if (err.code && err.code === 11000) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ message: `${Object.keys(err.keyValue)} is already used` })
+  }
+
+  res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err)
 };
