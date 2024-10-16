@@ -11,7 +11,7 @@ module.exports = (err, req, res, next) => {
       return { [path]: message }
     });
     const message = Object.assign({}, ...errors)
-    res.status(StatusCodes.BAD_REQUEST).json(message)
+    return res.status(StatusCodes.BAD_REQUEST).json(message)
   }
 
   if (err.code && err.code === 11000) {

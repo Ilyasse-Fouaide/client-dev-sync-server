@@ -31,9 +31,9 @@ exports.login = tryCatchWrapper(async (req, res, next) => {
     return next(Error.badRequest('Invalid Credentials'));
   }
 
-  res.cookie('refresh_token', user.genRefreshToken(), { httpOnly: true, secure: config.APP_ENV === 'production' });
-
-  res.status(StatusCodes.OK).json({ body: req.body, token: user.genRefreshToken() });
+  res
+    .cookie('refresh_token', user.genRefreshToken(), { httpOnly: true, secure: config.APP_ENV === 'production' })
+    .status(StatusCodes.OK).json({ body: req.body, token: user.genRefreshToken() });
 });
 
 module.exports.logout = (req, res) => {
@@ -44,7 +44,7 @@ module.exports.logout = (req, res) => {
       httpOnly: true,
       expires: new Date(Date.now())  // expires now
     })
-    .json({ success: true });
+    .json({ message: "Logged out!." });
 }
 
 exports.profile = tryCatchWrapper(async (req, res, next) => {

@@ -40,6 +40,10 @@ const userSchema = new Schema({
 
 userSchema.pre('save', function () {
   const user = this;
+  /**
+   * Returns true if any of the given paths are modified, else false. If no arguments, returns true if any path in this document is modified.
+  */
+  console.log(user.isModified('password'));
   if (!user.isModified('password')) return;
 
   const salt = bcrypt.genSaltSync(8);
