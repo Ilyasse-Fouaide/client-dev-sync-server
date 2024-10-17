@@ -2,7 +2,7 @@ const tryCatchWrapper = require('../tryCatchWrapper');
 const User = require('../models/user.model');
 const Error = require('../customError');
 const { StatusCodes } = require('http-status-codes');
-const config = require('../config');
+const { setCookie } = require('../utils');
 
 exports.register = tryCatchWrapper(async (req, res, next) => {
   const user = new User(req.body);
@@ -31,9 +31,9 @@ exports.login = tryCatchWrapper(async (req, res, next) => {
     return next(Error.badRequest('Invalid Credentials'));
   }
 
-  res
-    .cookie('refresh_token', user.genRefreshToken(), { httpOnly: true, secure: config.APP_ENV === 'production' })
-    .status(StatusCodes.OK).json({ body: req.body, token: user.genRefreshToken() });
+  setCookie(res, user.genRefreshToken());
+
+  res.status(StatusCodes.OK).json({ body: req.body, token: user.genRefreshToken() });
 });
 
 module.exports.logout = (req, res) => {

@@ -1,7 +1,8 @@
 const { StatusCodes, ReasonPhrases } = require("http-status-codes");
 const tryCatchWrapper = require("../tryCatchWrapper");
 const User = require("../models/user.model");
-const Error = require('../customError')
+const Error = require('../customError');
+const { setCookie } = require('../utils');
 
 /**
  * Fetches user profile based on userId.
@@ -34,11 +35,18 @@ exports.updateUser = tryCatchWrapper(async (req, res, next) => {
     return next(Error.unAuthorized(ReasonPhrases.UNAUTHORIZED));
   }
 
-  const user = await User.findByIdAndUpdate(userId, req.body, { new: true, projection: "-password -_id -role" });
+  const user = await User.findByIdAndUpdate(userId, req.body, { new: true });
 
   if (!user) return next(Error.notFound('user not found!'));
 
-  await user.save();
+  // generate other token with updated data
+  // but when the admin updates other profiles
+  // do not generate token
+  if (isOwner) {
+    setCookie(res, user.genRefreshToken());
+  }
 
-  res.status(StatusCodes.OK).json(user);
+  const { password, role, _id, ...others } = user._doc
+
+  res.status(StatusCodes.OK).json(others);
 });
