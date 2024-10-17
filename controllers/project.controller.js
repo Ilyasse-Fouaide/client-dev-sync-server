@@ -3,6 +3,8 @@ const tryCatchWrapper = require("../tryCatchWrapper");
 const Project = require("../models/project.model");
 const UserProject = require('../models/user_project.model');
 const Error = require("../customError");
+const Invitation = require("../models/invitation.model");
+const { v4: uuidv4 } = require('uuid')
 
 exports.index = tryCatchWrapper(async (req, res, next) => {
   const { userId } = req.user;
@@ -33,7 +35,7 @@ exports.create = tryCatchWrapper(async (req, res, next) => {
   await project.save();
   await userProject.save();
 
-  res.status(StatusCodes.OK).json({
+  res.status(StatusCodes.CREATED).json({
     project: {
       description: project.description,
       icon: project.icon,
@@ -45,5 +47,36 @@ exports.create = tryCatchWrapper(async (req, res, next) => {
   });
 });
 
-exports.sendAcceptationEmail = () => { };
-exports.assingProtjectRole = () => { };
+exports.sendInvitationEmail = tryCatchWrapper(async (req, res, next) => {
+  const { userId } = req.user;
+  const { projectId } = req.params;
+  const { email, role } = req.body;
+
+  // Generate a unique token
+  const token = uuidv4();
+
+  // only my own projects has access to send email invi
+  const projectOwner = await UserProject.findOne({
+    project: projectId,
+    user: userId,
+    role: 'owner' // Assuming the role field indicates ownership
+  });
+
+  if (!projectOwner) return next(Error.unAuthorized('You don\'t have access to send email for this project'));
+
+  const invitation = new Invitation({
+    sender: userId,
+    project: projectId,
+    recipient_email: email,
+    role,
+    token,
+  });
+
+  await invitation.save();
+
+  res.status(StatusCodes.OK).json(invitation);
+});
+
+exports.acceptInvitation = tryCatchWrapper(async (req, res, next) => {
+  res.status(StatusCodes.OK).json({ message: true });
+});

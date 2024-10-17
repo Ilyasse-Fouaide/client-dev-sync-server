@@ -15,7 +15,9 @@ const invitationSchema = new Schema({
   },
   role: {
     type: String,
-    required: true,
+    required: false,
+    enum: ['client'],
+    default: 'client'
   },
   status: {
     type: String,
@@ -30,6 +32,7 @@ const invitationSchema = new Schema({
   isValid: {
     type: Boolean,
     required: true,
+    default: true,
   },
 }, { timestamps: true });
 
