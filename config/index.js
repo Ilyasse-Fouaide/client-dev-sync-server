@@ -7,6 +7,9 @@ module.exports = {
   "APP_URL": process.env.APP_URL,
   "APP_PORT": process.env.APP_PORT,
 
+  "CLIENT_URL": process.env.CLIENT_URL,
+  "CLIENT_PORT": process.env.CLIENT_PORT,
+
   "DB_CONNECTION": process.env.DB_CONNECTION,
   "DB_HOST": process.env.DB_HOST,
   "DB_PORT": process.env.DB_PORT,

@@ -3,6 +3,9 @@ const router = express.Router();
 const user = require('../controllers/user.controller');
 const authorized = require('../middlewares/authorized');
 
+router.route('/:userId/password')
+  .patch(authorized, user.updateUserPassword);
+
 router.route('/:userId')
   .get(authorized, user.getUser)
   .put(authorized, user.updateUser);

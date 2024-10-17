@@ -11,8 +11,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-app.use('/api/v1', require('./routes/auth.routes'));
+app.use('/api/v1/projects', require('./routes/project.routes'));
 app.use('/api/v1/users', require('./routes/user.routes'));
+app.use('/api/v1', require('./routes/auth.routes'));
 app.use(notFound);
 app.use(erroHander);
 

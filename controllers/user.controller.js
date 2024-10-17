@@ -50,3 +50,27 @@ exports.updateUser = tryCatchWrapper(async (req, res, next) => {
 
   res.status(StatusCodes.OK).json(others);
 });
+
+exports.updateUserPassword = tryCatchWrapper(async (req, res, next) => {
+  const { oldPassword, newPassword } = req.body;
+  const { userId } = req.params;
+
+  if (!oldPassword || !newPassword) return next(Error.badRequest('Please fill your empty fields.'));
+
+  const user = await User.findById(userId);
+
+  const isAdmin = req.user.role === "admin";
+  const isOwner = req.user.userId === userId;
+  if (!isAdmin && !isOwner) {
+    return next(Error.unAuthorized(ReasonPhrases.UNAUTHORIZED));
+  }
+
+  const isMatch = await user.comparePassword(oldPassword, user.password);
+
+  if (!isMatch) return next(Error.badRequest('Your old password is wrong.'))
+
+  user.password = newPassword;
+  await user.save();
+
+  res.status(StatusCodes.OK).json({ message: "updated password succefully" });
+});
