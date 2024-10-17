@@ -6,6 +6,9 @@ const authorized = require('../middlewares/authorized');
 router.route('/:projectId/send-invitation')
   .post(authorized, project.sendInvitationEmail);
 
+router.route('/invitations/:invitationId/accept/:token')
+  .post(authorized, project.acceptInvitation);
+
 router.route('/invitations')
   .get(authorized, project.getMyInvitations);
 

@@ -22,12 +22,11 @@ const invitationSchema = new Schema({
   status: {
     type: String,
     required: true,
-    enum: ['in progress', 'accepted'],
-    default: 'in progress',
+    enum: ['pending', 'accepted'],
+    default: 'pending',
   },
   token: {
     type: String,
-    required: true,
   },
   isValid: {
     type: Boolean,

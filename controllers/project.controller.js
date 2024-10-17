@@ -80,7 +80,8 @@ exports.sendInvitationEmail = tryCatchWrapper(async (req, res, next) => {
 exports.getMyInvitations = tryCatchWrapper(async (req, res, next) => {
   // Find all invitations where the user is the recipient
   const invitations = await Invitation.find({
-    recipient: req.user.userId
+    recipient: req.user.userId,
+    isValid: true,
   })
     .populate({ path: 'project', select: '_id description name icon' })
     .populate({ path: 'sender', select: '_id email' })
@@ -90,9 +91,39 @@ exports.getMyInvitations = tryCatchWrapper(async (req, res, next) => {
 });
 
 exports.acceptInvitation = tryCatchWrapper(async (req, res, next) => {
-  res.status(StatusCodes.OK).json({ message: true });
+  const { invitationId, token } = req.params;
+
+  const invitation = await Invitation
+    .findOne({ _id: invitationId, token, isValid: true })
+    .populate({ path: 'project', select: '_id description name icon' })
+    .populate({ path: 'sender', select: '_id email' })
+    .populate({ path: 'recipient', select: '_id email' });
+
+  if (!invitation) return next(Error.unAuthorized('Invalid or expired invitation.'));
+
+  const userProject = new UserProject({
+    user: req.user.userId,  // same as invitation.recipient
+    project: invitation.project._id,
+    role: invitation.role,
+  });
+
+  await userProject.save();
+
+  invitation.status = 'accepted';
+  invitation.token = null;
+  invitation.isValid = false;
+
+  await invitation.save();
+
+  res.status(StatusCodes.OK).json({ message: "Invitation accepted successfully." });
 });
 
 exports.trackInvitations = tryCatchWrapper(async (req, res, next) => {
   res.status(StatusCodes.OK).json({ message: true });
 });
+
+// update project > only the owner can modify
+// delete project > only the owner can delete
+// display all the members of a project
+// update membres role > only owner can update roles of the members
+// delete member > only owner can kick a member
