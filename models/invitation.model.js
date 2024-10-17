@@ -9,9 +9,9 @@ const invitationSchema = new Schema({
     type: Types.ObjectId,
     ref: 'projects'
   },
-  recipient_email: {
-    type: String,
-    required: true,
+  recipient: {
+    type: Types.ObjectId,
+    ref: 'users'
   },
   role: {
     type: String,

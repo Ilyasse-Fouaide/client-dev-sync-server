@@ -50,7 +50,7 @@ exports.create = tryCatchWrapper(async (req, res, next) => {
 exports.sendInvitationEmail = tryCatchWrapper(async (req, res, next) => {
   const { userId } = req.user;
   const { projectId } = req.params;
-  const { email, role } = req.body;
+  const { recipient, role } = req.body;
 
   // Generate a unique token
   const token = uuidv4();
@@ -67,16 +67,32 @@ exports.sendInvitationEmail = tryCatchWrapper(async (req, res, next) => {
   const invitation = new Invitation({
     sender: userId,
     project: projectId,
-    recipient_email: email,
+    recipient,
     role,
     token,
   });
 
   await invitation.save();
 
-  res.status(StatusCodes.OK).json(invitation);
+  res.status(StatusCodes.CREATED).json(invitation);
+});
+
+exports.getMyInvitations = tryCatchWrapper(async (req, res, next) => {
+  // Find all invitations where the user is the recipient
+  const invitations = await Invitation.find({
+    recipient: req.user.userId
+  })
+    .populate({ path: 'project', select: '_id description name icon' })
+    .populate({ path: 'sender', select: '_id email' })
+    .populate({ path: 'recipient', select: '_id email' });
+
+  res.status(StatusCodes.OK).json(invitations);
 });
 
 exports.acceptInvitation = tryCatchWrapper(async (req, res, next) => {
+  res.status(StatusCodes.OK).json({ message: true });
+});
+
+exports.trackInvitations = tryCatchWrapper(async (req, res, next) => {
   res.status(StatusCodes.OK).json({ message: true });
 });
