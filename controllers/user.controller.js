@@ -59,6 +59,8 @@ exports.updateUserPassword = tryCatchWrapper(async (req, res, next) => {
 
   const user = await User.findById(userId);
 
+  if (!user) return next(Error.notFound('user not found!'));
+
   const isAdmin = req.user.role === "admin";
   const isOwner = req.user.userId === userId;
   if (!isAdmin && !isOwner) {

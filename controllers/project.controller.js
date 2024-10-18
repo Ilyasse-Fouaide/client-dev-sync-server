@@ -4,7 +4,8 @@ const Project = require("../models/project.model");
 const UserProject = require('../models/user_project.model');
 const Error = require("../customError");
 const Invitation = require("../models/invitation.model");
-const { v4: uuidv4 } = require('uuid')
+const { v4: uuidv4 } = require('uuid');
+const { Types } = require("mongoose");
 
 exports.index = tryCatchWrapper(async (req, res, next) => {
   const { userId } = req.user;
@@ -51,6 +52,27 @@ exports.create = tryCatchWrapper(async (req, res, next) => {
       role: userProject.role,
     }
   });
+});
+
+exports.update = tryCatchWrapper(async (req, res, next) => {
+  const { name, description, icon } = req.body;
+  const { projectId } = req.params;
+  const { userId } = req.user;
+
+  const projectObjectId = new Types.ObjectId(projectId);
+
+  // Check if the user is an owner of the project
+  const userProject = await UserProject.findOne({ user: userId, project: projectObjectId, role: 'owner' });
+
+  if (!userProject && req.user.role !== 'admin') return next(Error.unAuthorized('You are not authorized to update this project'));
+
+  const project = await Project.findByIdAndUpdate(projectId, {
+    name, description, icon
+  }, { new: true, runValidators: true });
+
+  if (!project) return next(Error.notFound('Project not found'));
+
+  res.status(StatusCodes.CREATED).json(project);
 });
 
 exports.sendInvitationEmail = tryCatchWrapper(async (req, res, next) => {

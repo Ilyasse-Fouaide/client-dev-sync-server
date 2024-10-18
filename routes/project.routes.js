@@ -12,6 +12,9 @@ router.route('/invitations/:invitationId/accept/:token')
 router.route('/invitations')
   .get(authorized, project.getMyInvitations);
 
+router.route('/:projectId')
+  .patch(authorized, project.update);
+
 router.route('/')
   .get(authorized, project.index)
   .post(authorized, project.create);

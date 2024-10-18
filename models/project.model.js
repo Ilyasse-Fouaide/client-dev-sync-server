@@ -7,11 +7,11 @@ const projetSchema = new Schema({
   },
   description: {
     type: String,
-    default: null,
+    default: "",
   },
   icon: {
     type: String,
-    default: null,
+    default: "",
   },
 }, { timestamps: true });
 
