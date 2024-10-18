@@ -13,11 +13,15 @@ Here’s a detailed description of essential project management features:
 
 - **Create Project**: Allow users to create and set icon for that project.
 
+<img src="./assets/project-creation.svg" align="center" />
+
 ### 3. Task Management
 
 - **Task Creation**: Easy task creation with details such as task title, description, status, due dates, priority levels, Budgets, timeline (from-to).
 - **Subtasks**: Break larger tasks into smaller, manageable subtasks.
 - **Task Assignments**: Assign tasks to team members with notifications.
+
+<img src="./assets/task-management.svg" align="center" />
 
 ### 4. Visual Project Tracking
 
@@ -48,3 +52,5 @@ Here’s a detailed description of essential project management features:
 - **Email Invitations**: Users can invite team members by entering their email addresses.
 - **Role Assignment**: Allow users to specify roles (admin, member, guest) during the invitation process.
 - **Acceptance Workflow**: Upon receiving the invitation, team members can accept via a link that directs them to set up their profiles.
+
+<img src="./assets/team-member-invitation.svg" align="center" />
