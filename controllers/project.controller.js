@@ -9,8 +9,14 @@ const { v4: uuidv4 } = require('uuid')
 exports.index = tryCatchWrapper(async (req, res, next) => {
   const { userId } = req.user;
 
+  // If the user has admin privileges, retrieve all projects created by someone
+  // Otherwize get all projects that created by me.
+  const search = req.user.role === "admin"
+    ? { role: 'owner' }
+    : { user: userId, role: 'owner' };
+
   const userProjects = await UserProject
-    .find({ user: userId })
+    .find(search)
     .populate({ path: 'user', select: '_id full_name email' })
     .populate({ path: 'project', select: '_id name' });
 
@@ -123,7 +129,7 @@ exports.trackInvitations = tryCatchWrapper(async (req, res, next) => {
 });
 
 // update project > only the owner can modify
-// delete project > only the owner can delete
+// delete project > only the owner can delete > delete cascade
 // display all the members of a project
 // update membres role > only owner can update roles of the members
 // delete member > only owner can kick a member
