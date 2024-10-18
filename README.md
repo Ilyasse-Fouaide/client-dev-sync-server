@@ -1,10 +1,6 @@
 # Project management application
 
-<center>
-
-<img src="./assets/project-application.svg" />
-
-</center>
+<img src="./assets/project-application.svg" align="center" width="600px" />
 
 Here’s a detailed description of essential project management features:
 
