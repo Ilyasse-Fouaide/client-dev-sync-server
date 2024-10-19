@@ -75,6 +75,26 @@ exports.update = tryCatchWrapper(async (req, res, next) => {
   res.status(StatusCodes.CREATED).json(project);
 });
 
+exports.delete = tryCatchWrapper(async (req, res, next) => {
+  const { projectId } = req.params;
+  const { userId } = req.user;
+
+  const projectObjectId = new Types.ObjectId(projectId);
+
+  // Check if the user is an owner of the project
+  const userProject = await UserProject.findOne({ user: userId, project: projectObjectId, role: 'owner' });
+
+  if (!userProject && req.user.role !== 'admin') return next(Error.unAuthorized('You are not authorized to delete this project'));
+
+  const project = await Project.findByIdAndDelete(projectId);
+
+  if (!project) return next(Error.notFound('Project not found'));
+
+  await UserProject.deleteMany({ project: projectObjectId });
+
+  res.status(StatusCodes.NO_CONTENT).json();
+});
+
 exports.sendInvitationEmail = tryCatchWrapper(async (req, res, next) => {
   const { userId } = req.user;
   const { projectId } = req.params;

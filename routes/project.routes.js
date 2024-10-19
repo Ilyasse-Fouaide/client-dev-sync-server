@@ -13,7 +13,8 @@ router.route('/invitations')
   .get(authorized, project.getMyInvitations);
 
 router.route('/:projectId')
-  .patch(authorized, project.update);
+  .patch(authorized, project.update)
+  .delete(authorized, project.delete);
 
 router.route('/')
   .get(authorized, project.index)
