@@ -19,10 +19,24 @@ exports.index = tryCatchWrapper(async (req, res, next) => {
   const userProjects = await UserProject
     .find(search)
     .populate({ path: 'user', select: '_id full_name email' })
-    .populate({ path: 'project', select: '_id name' });
+    .populate({ path: 'project', select: '_id name icon' });
 
   res.status(StatusCodes.OK).json(userProjects);
 });
+
+exports.joinedProjects = tryCatchWrapper(async (req, res, next) => {
+  const { userId } = req.user;
+
+  // Query for user projects where the user has the role of 'client'
+  const clientProjects = await UserProject
+    .find({ user: userId, role: 'client' })
+    .populate({ path: 'user', select: '_id full_name email' })
+    .populate({ path: 'project', select: '_id name icon' });
+
+  // If no projects are found, you may want to return an empty array or a message
+  res.status(StatusCodes.OK).json(clientProjects);
+});
+
 
 exports.create = tryCatchWrapper(async (req, res, next) => {
   const { name, role } = req.body;
@@ -170,8 +184,7 @@ exports.trackInvitations = tryCatchWrapper(async (req, res, next) => {
   res.status(StatusCodes.OK).json({ message: true });
 });
 
-// update project > only the owner can modify
-// delete project > only the owner can delete > delete cascade
+// admins has functionality that assign member to a project and give them cient role
 // display all the members of a project
 // update membres role > only owner can update roles of the members
 // delete member > only owner can kick a member
