@@ -76,3 +76,5 @@ exports.updateUserPassword = tryCatchWrapper(async (req, res, next) => {
 
   res.status(StatusCodes.OK).json({ message: "updated password succefully" });
 });
+
+// search user

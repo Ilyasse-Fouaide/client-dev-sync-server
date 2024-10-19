@@ -68,6 +68,32 @@ exports.create = tryCatchWrapper(async (req, res, next) => {
   });
 });
 
+
+exports.getSingleProject = tryCatchWrapper(async (req, res, next) => {
+  const { projectId } = req.params;
+  const projectObjectId = new Types.ObjectId(projectId);
+
+  const projectMembers = await UserProject.find({ project: projectObjectId });
+
+  res.status(StatusCodes.OK).json(projectMembers);
+});
+
+exports.getProjectMembers = tryCatchWrapper(async (req, res, next) => {
+  const { projectId } = req.params;
+  const { userId, role } = req.user;
+  const projectObjectId = new Types.ObjectId(projectId);
+
+  const userProject = await UserProject.findOne({ user: userId, project: projectObjectId });
+
+  if (!userProject && role !== "admin") return next(Error.unAuthorized('You are not member of this project'))
+
+  const projectMembers = await UserProject
+    .find({ project: projectObjectId }, { project: 0, updatedAt: 0, __v: 0 })
+    .populate({ path: 'user', select: '_id full_name email' })
+
+  res.status(StatusCodes.OK).json(projectMembers);
+});
+
 exports.update = tryCatchWrapper(async (req, res, next) => {
   const { name, description, icon } = req.body;
   const { projectId } = req.params;
