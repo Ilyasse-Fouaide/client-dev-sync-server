@@ -4,8 +4,15 @@ const notFound = require('./middlewares/notFound');
 const erroHander = require('./middlewares/errorHandler');
 const connect = require('./db/connect');
 const cookieParser = require('cookie-parser');
+const cors = require('cors')
 
 const app = express();
+
+app.use(cors({
+  origin: config.CLIENT_URL,
+  // origin: 'http://127.0.0.1:5173',
+  credentials: true
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

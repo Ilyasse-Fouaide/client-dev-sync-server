@@ -19,7 +19,6 @@ const userSchema = new Schema({
   },
   role: {
     type: String,
-    required: [true, 'password required'],
     enum: {
       values: ['user', 'admin'],
       message: 'expected \'user, admin\' but got {VALUE}'

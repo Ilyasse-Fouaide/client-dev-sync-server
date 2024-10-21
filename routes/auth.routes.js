@@ -15,4 +15,7 @@ router.route('/logout')
 router.route('/profile')
   .get(authorized, auth.profile);
 
+router.route('/check-email')
+  .post(auth.checkEmail);
+
 module.exports = router

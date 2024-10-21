@@ -5,7 +5,9 @@ const setCookie = (res, token) => {
     .cookie('refresh_token', token,
       {
         httpOnly: true,
-        secure: config.APP_ENV === 'production'
+        secure: config.APP_ENV === 'production',
+        // secure: true,
+        sameSite: 'Strict'
       });
 };
 

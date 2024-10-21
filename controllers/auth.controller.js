@@ -9,6 +9,8 @@ exports.register = tryCatchWrapper(async (req, res, next) => {
 
   await user.save();
 
+  setCookie(res, user.genRefreshToken());
+
   res.status(StatusCodes.CREATED).json(req.body);
 });
 
@@ -50,3 +52,15 @@ module.exports.logout = (req, res) => {
 exports.profile = tryCatchWrapper(async (req, res, next) => {
   res.status(StatusCodes.OK).json(req.user);
 });
+
+exports.checkEmail = tryCatchWrapper(async (req, res, next) => {
+  const { email } = req.body
+
+  if (!email) return next(Error.badRequest('Please enter your email address'));
+
+  const emailExists = await User.findOne({ email });
+
+  if (emailExists) return next(Error.badRequest('Account with this email already exists. Please enter another email'));
+
+  res.status(StatusCodes.NO_CONTENT).json();
+})

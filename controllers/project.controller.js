@@ -135,6 +135,14 @@ exports.delete = tryCatchWrapper(async (req, res, next) => {
   res.status(StatusCodes.NO_CONTENT).json();
 });
 
+exports.kickMember = tryCatchWrapper(async (req, res, next) => {
+  const { projectId, userIdToKick } = req.params;
+  const { userId, role } = req.user;
+  const projectObjectId = new Types.ObjectId(projectId);
+
+  res.status(StatusCodes.NO_CONTENT).json(); // Respond with no content
+});
+
 exports.sendInvitationEmail = tryCatchWrapper(async (req, res, next) => {
   const { userId } = req.user;
   const { projectId } = req.params;
@@ -210,7 +218,6 @@ exports.trackInvitations = tryCatchWrapper(async (req, res, next) => {
   res.status(StatusCodes.OK).json({ message: true });
 });
 
-// admins has functionality that assign member to a project and give them cient role
-// display all the members of a project
+// admins has functionality that assign member to a project and give them client role
 // update membres role > only owner can update roles of the members
 // delete member > only owner can kick a member
