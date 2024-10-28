@@ -3,9 +3,12 @@ const User = require('../models/user.model');
 const Error = require('../customError');
 const { StatusCodes } = require('http-status-codes');
 const { setCookie } = require('../utils');
+const generateDefaultProfileImage = require('../utils/genDefaultImage');
 
 exports.register = tryCatchWrapper(async (req, res, next) => {
   const user = new User(req.body);
+
+  user.image = generateDefaultProfileImage(req.body.full_name);
 
   await user.save();
 

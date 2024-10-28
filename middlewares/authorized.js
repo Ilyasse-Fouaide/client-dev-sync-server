@@ -14,6 +14,8 @@ const authorized = (req, res, next) => {
 
     const user = {
       userId: decoded.userId,
+      full_name: decoded.full_name,
+      image: decoded.image,
       email: decoded.email,
       role: decoded.role,
     }

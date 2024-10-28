@@ -17,6 +17,10 @@ const userSchema = new Schema({
     type: String,
     required: [true, 'password required']
   },
+  image: {
+    type: String,
+    required: false,
+  },
   role: {
     type: String,
     enum: {
@@ -58,6 +62,8 @@ userSchema.methods.comparePassword = async function (passwordString, hashedPassw
 userSchema.methods.genRefreshToken = function () {
   return jwt.sign({
     userId: this._id,
+    full_name: this.full_name,
+    image: this.image,
     email: this.email,
     role: this.role
   }, config.JWT_SECRET_KEY, { expiresIn: config.JWT_REFRESHTOKEN_LIFETIME || '7d' });
