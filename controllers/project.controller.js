@@ -39,15 +39,16 @@ exports.joinedProjects = tryCatchWrapper(async (req, res, next) => {
 
 
 exports.create = tryCatchWrapper(async (req, res, next) => {
-  const { name, role } = req.body;
+  const { name, role, description } = req.body;
   const { userId } = req.user;
 
-  if (!name || !role) return next(Error.badRequest('name or role required'));
+  // if (!name) return next(Error.badRequest('role required'));
 
   const project = new Project();
   const userProject = new UserProject();
 
   project.name = name;
+  project.description = description;
 
   userProject.user = userId;
   userProject.project = project._id;
@@ -56,16 +57,7 @@ exports.create = tryCatchWrapper(async (req, res, next) => {
   await project.save();
   await userProject.save();
 
-  res.status(StatusCodes.CREATED).json({
-    project: {
-      description: project.description,
-      icon: project.icon,
-      name: project.name,
-    },
-    userProject: {
-      role: userProject.role,
-    }
-  });
+  res.status(StatusCodes.NO_CONTENT).json();
 });
 
 
@@ -133,14 +125,6 @@ exports.delete = tryCatchWrapper(async (req, res, next) => {
   await UserProject.deleteMany({ project: projectObjectId });
 
   res.status(StatusCodes.NO_CONTENT).json();
-});
-
-exports.kickMember = tryCatchWrapper(async (req, res, next) => {
-  const { projectId, userIdToKick } = req.params;
-  const { userId, role } = req.user;
-  const projectObjectId = new Types.ObjectId(projectId);
-
-  res.status(StatusCodes.NO_CONTENT).json(); // Respond with no content
 });
 
 exports.sendInvitationEmail = tryCatchWrapper(async (req, res, next) => {
@@ -214,8 +198,18 @@ exports.acceptInvitation = tryCatchWrapper(async (req, res, next) => {
   res.status(StatusCodes.OK).json({ message: "Invitation accepted successfully." });
 });
 
+// ! ---------------------------------------------------------------------------
+
 exports.trackInvitations = tryCatchWrapper(async (req, res, next) => {
   res.status(StatusCodes.OK).json({ message: true });
+});
+
+exports.kickMember = tryCatchWrapper(async (req, res, next) => {
+  const { projectId, userIdToKick } = req.params;
+  const { userId, role } = req.user;
+  const projectObjectId = new Types.ObjectId(projectId);
+
+  res.status(StatusCodes.NO_CONTENT).json(); // Respond with no content
 });
 
 // admins has functionality that assign member to a project and give them client role

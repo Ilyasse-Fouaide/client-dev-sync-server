@@ -50,6 +50,4 @@ function generateDefaultProfileImage(initial) {
   return image;
 }
 
-console.log(generateDefaultProfileImage('kamal fouaide'))
-
 module.exports = generateDefaultProfileImage;

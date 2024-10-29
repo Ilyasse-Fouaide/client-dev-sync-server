@@ -11,8 +11,9 @@ const userProjectSchema = new Schema({
   },
   role: {
     type: String,
-    required: [true, 'role is required'],
+    required: false,
     enum: ['owner', 'client'],
+    default: 'owner'
   },
 }, { timestamps: true });
 
