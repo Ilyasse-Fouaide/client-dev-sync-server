@@ -65,9 +65,13 @@ exports.getSingleProject = tryCatchWrapper(async (req, res, next) => {
   const { projectId } = req.params;
   const projectObjectId = new Types.ObjectId(projectId);
 
-  const projectMembers = await UserProject.find({ project: projectObjectId });
+  const project = await UserProject.findOne({ project: projectObjectId });
 
-  res.status(StatusCodes.OK).json(projectMembers);
+  if (!project) {
+    return next(Error.notFound('Project not found'));
+  }
+
+  res.status(StatusCodes.OK).json(project);
 });
 
 exports.getProjectMembers = tryCatchWrapper(async (req, res, next) => {
