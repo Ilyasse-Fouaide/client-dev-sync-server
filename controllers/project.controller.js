@@ -2,57 +2,77 @@ const { StatusCodes } = require("http-status-codes");
 const tryCatchWrapper = require("../tryCatchWrapper");
 const Project = require("../models/project.model");
 const UserProject = require('../models/user_project.model');
+const UserProjectRole = require('../models/user_project_role');
 const Error = require("../customError");
 const Invitation = require("../models/invitation.model");
 const { v4: uuidv4 } = require('uuid');
 const { Types } = require("mongoose");
 
-exports.index = tryCatchWrapper(async (req, res, next) => {
+exports.myProjects = tryCatchWrapper(async (req, res, next) => {
   const { userId } = req.user;
+
+  // get the administrator role
+  const administratorRole = await UserProjectRole.findOne({ name: 'administrator' });
+
+  if (!administratorRole) {
+    return next(Error.notFound('Administrator role not found'));
+  }
 
   // If the user has admin privileges, retrieve all projects created by someone
   // Otherwize get all projects that created by me.
   const search = req.user.role === "admin"
-    ? { role: 'owner' }
-    : { user: userId, role: 'owner' };
+    ? { role: administratorRole._id }
+    : { user: userId, role: administratorRole._id };
 
   const userProjects = await UserProject
     .find(search)
-    .populate({ path: 'user', select: '_id full_name email' })
-    .populate({ path: 'project', select: '_id name icon' });
+    .populate({ path: 'user', select: 'full_name email' })
+    .populate({ path: 'project', select: 'name icon' })
+    .populate({ path: 'role', select: 'name' });
 
   res.status(StatusCodes.OK).json(userProjects);
 });
 
-exports.joinedProjects = tryCatchWrapper(async (req, res, next) => {
+exports.myJoinedProjects = tryCatchWrapper(async (req, res, next) => {
   const { userId } = req.user;
 
-  // Query for user projects where the user has the role of 'client'
-  const clientProjects = await UserProject
-    .find({ user: userId, role: 'client' })
-    .populate({ path: 'user', select: '_id full_name email' })
-    .populate({ path: 'project', select: '_id name icon' });
+  // get member role
+  const memberRole = await UserProjectRole.findOne({ name: 'member' });
 
-  // If no projects are found, you may want to return an empty array or a message
-  res.status(StatusCodes.OK).json(clientProjects);
+  if (!memberRole) {
+    return next(Error.notFound('member role not found'));
+  }
+
+  // Query for user projects where the user has the role of 'member'
+  const projects = await UserProject
+    .find({ user: userId, role: memberRole._id })
+    .populate({ path: 'user', select: '_id full_name email' })
+    .populate({ path: 'project', select: '_id name icon' })
+    .populate({ path: 'role', select: 'name' });
+
+  res.status(StatusCodes.OK).json(projects);
 });
 
 
 exports.create = tryCatchWrapper(async (req, res, next) => {
-  const { name, role, description } = req.body;
+  const { name, description } = req.body;
   const { userId } = req.user;
-
-  // if (!name) return next(Error.badRequest('role required'));
 
   const project = new Project();
   const userProject = new UserProject();
 
+  const administratorRole = await UserProjectRole.findOne({ name: 'administrator' });
+
+  if (!administratorRole) {
+    return next(Error.notFound('Administrator role not found'));
+  }
+
   project.name = name;
-  project.description = description;
+  project.description = description || "";
 
   userProject.user = userId;
   userProject.project = project._id;
-  userProject.role = role;
+  userProject.role = administratorRole._id;
 
   await project.save();
   await userProject.save();
@@ -60,12 +80,32 @@ exports.create = tryCatchWrapper(async (req, res, next) => {
   res.status(StatusCodes.NO_CONTENT).json();
 });
 
-
 exports.getSingleProject = tryCatchWrapper(async (req, res, next) => {
   const { projectId } = req.params;
+  const { role, userId } = req.user;
   const projectObjectId = new Types.ObjectId(projectId);
+  const userObjectId = new Types.ObjectId(userId);
 
-  const project = await UserProject.findOne({ project: projectObjectId });
+  const userProject = await UserProject.findOne({ project: projectObjectId });
+
+  if (!userProject) {
+    return next(Error.notFound('project not found'));
+  }
+
+  const isMyOwnProject = userProject.user.toString() === userObjectId.toString()
+  const isAdmin = role === 'admin'
+
+  // update here
+  // only admin can see other projects
+  if (!isAdmin && !isMyOwnProject) {
+    return next(Error.unAuthorized('You are not allowed to see this project'))
+  }
+
+  const project = await UserProject
+    .findOne({ project: projectObjectId })
+    .populate({ path: 'user', select: 'full_name email image' })
+    .populate({ path: 'project', select: 'name icon' })
+    .populate({ path: 'role', select: 'name' });
 
   if (!project) {
     return next(Error.notFound('Project not found'));
@@ -78,14 +118,24 @@ exports.getProjectMembers = tryCatchWrapper(async (req, res, next) => {
   const { projectId } = req.params;
   const { userId, role } = req.user;
   const projectObjectId = new Types.ObjectId(projectId);
+  const userObjectId = new Types.ObjectId(userId);
 
-  const userProject = await UserProject.findOne({ user: userId, project: projectObjectId });
+  const userProject = await UserProject.findOne({ project: projectObjectId });
 
-  if (!userProject && role !== "admin") return next(Error.unAuthorized('You are not member of this project'))
+  if (!userProject) {
+    return next(Error.notFound('project not found'));
+  }
+
+  const isMyOwnProject = userProject.user.toString() === userObjectId.toString()
+  const isAdmin = role === 'admin'
+
+  // non admins role cannot see members of other projects
+  if (!isMyOwnProject && !isAdmin) return next(Error.unAuthorized('You are not member of this project'))
 
   const projectMembers = await UserProject
     .find({ project: projectObjectId }, { project: 0, updatedAt: 0, __v: 0 })
-    .populate({ path: 'user', select: '_id full_name email' })
+    .populate({ path: 'user', select: '_id full_name email image' })
+    .populate({ path: 'role', select: 'name' })
 
   res.status(StatusCodes.OK).json(projectMembers);
 });
