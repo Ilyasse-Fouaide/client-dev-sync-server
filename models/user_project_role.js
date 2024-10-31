@@ -5,7 +5,10 @@ const userProjectRoleSchema = new Schema({
     type: String,
     unique: true,
     required: true,
-    enum: ['administrator', 'memmber', 'guest']
+    enum: {
+      values: ['administrator', 'member', 'guest'],
+      message: '\'{VALUE}\' is not a valid name try: \'administrator, member or guest\''
+    }
   },
 }, { timestamps: true });
 

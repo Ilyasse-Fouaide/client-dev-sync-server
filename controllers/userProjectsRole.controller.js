@@ -15,7 +15,7 @@ exports.index = tryCatchWrapper(async (req, res, next) => {
 });
 
 exports.show = tryCatchWrapper(async (req, res, next) => {
-  const { id } = req.params.id
+  const { id } = req.params
 
   const role = await UserProjectRole.findById(id);
 
