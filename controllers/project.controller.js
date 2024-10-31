@@ -85,20 +85,15 @@ exports.getSingleProject = tryCatchWrapper(async (req, res, next) => {
   const { role, userId } = req.user;
 
   const projectObjectId = new Types.ObjectId(projectId);
-  const userObjectId = new Types.ObjectId(userId);
 
-  const userProject = await UserProject.findOne({ project: projectObjectId });
+  const search = role === 'admin'
+    ? { project: projectObjectId }
+    : { user: userId, project: projectObjectId }
+
+  const userProject = await UserProject.findOne(search);
 
   if (!userProject) {
-    return next(Error.notFound('project not found'));
-  }
-
-  const isMyOwnProject = userProject.user.toString() === userObjectId.toString()
-  const isAdmin = role === 'admin'
-
-  // only admins can view all projects, while regular users can only view their own projects
-  if (!isAdmin && !isMyOwnProject) {
-    return next(Error.unAuthorized('You are not allowed to see this project'))
+    return next(Error.notFound('project not found or you are not a member of this project'));
   }
 
   const project = await UserProject
@@ -119,19 +114,16 @@ exports.getProjectMembers = tryCatchWrapper(async (req, res, next) => {
   const { userId, role } = req.user;
 
   const projectObjectId = new Types.ObjectId(projectId);
-  const userObjectId = new Types.ObjectId(userId);
 
-  const userProject = await UserProject.findOne({ project: projectObjectId });
+  const search = role === 'admin'
+    ? { project: projectObjectId }
+    : { user: userId, project: projectObjectId }
+
+  const userProject = await UserProject.findOne(search);
 
   if (!userProject) {
-    return next(Error.notFound('project not found'));
+    return next(Error.notFound('project not found or you are not a member of this project'));
   }
-
-  const isMyOwnProject = userProject.user.toString() === userObjectId.toString()
-  const isAdmin = role === 'admin'
-
-  // only admins can see project members
-  if (!isMyOwnProject && !isAdmin) return next(Error.unAuthorized('You are not member of this project'))
 
   const projectMembers = await UserProject
     .find({ project: projectObjectId }, { project: 0, updatedAt: 0, __v: 0 })
@@ -207,6 +199,13 @@ exports.sendInvitationEmail = tryCatchWrapper(async (req, res, next) => {
   const { projectId } = req.params;
   const { recipient, role } = req.body;
 
+  // get the administrator role
+  const administratorRole = await UserProjectRole.findOne({ name: 'administrator' });
+
+  if (!administratorRole) {
+    return next(Error.notFound('Administrator role not found'));
+  }
+
   // Generate a unique token
   const token = uuidv4();
 
@@ -214,7 +213,7 @@ exports.sendInvitationEmail = tryCatchWrapper(async (req, res, next) => {
   const projectOwner = await UserProject.findOne({
     project: projectId,
     user: userId,
-    role: 'owner' // Assuming the role field indicates ownership
+    role: administratorRole._id
   });
 
   if (!projectOwner) return next(Error.unAuthorized('You don\'t have access to send email for this project'));
@@ -238,9 +237,10 @@ exports.getMyInvitations = tryCatchWrapper(async (req, res, next) => {
     recipient: req.user.userId,
     isValid: true,
   })
-    .populate({ path: 'project', select: '_id description name icon' })
-    .populate({ path: 'sender', select: '_id email' })
-    .populate({ path: 'recipient', select: '_id email' });
+    .populate({ path: 'project', select: 'description name icon' })
+    .populate({ path: 'sender', select: 'email image' })
+    .populate({ path: 'recipient', select: 'email image' })
+    .populate({ path: 'role', select: 'name' });
 
   res.status(StatusCodes.OK).json(invitations);
 });
@@ -250,16 +250,15 @@ exports.acceptInvitation = tryCatchWrapper(async (req, res, next) => {
 
   const invitation = await Invitation
     .findOne({ _id: invitationId, token, isValid: true })
-    .populate({ path: 'project', select: '_id description name icon' })
-    .populate({ path: 'sender', select: '_id email' })
-    .populate({ path: 'recipient', select: '_id email' });
+    .populate({ path: 'project', select: 'description name icon' })
+    .populate({ path: 'role', select: 'name' })
 
   if (!invitation) return next(Error.unAuthorized('Invalid or expired invitation.'));
 
   const userProject = new UserProject({
     user: req.user.userId,  // same as invitation.recipient
     project: invitation.project._id,
-    role: invitation.role,
+    role: invitation.role._id,
   });
 
   await userProject.save();

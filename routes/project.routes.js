@@ -12,16 +12,16 @@ router.route('/:projectId/send-invitation')
 router.route('/invitations/:invitationId/accept/:token')
   .post(authorized, project.acceptInvitation);
 
-router.route('/:projectId')
-  .get(authorized, project.getSingleProject)
-  .patch(authorized, project.update)
-  .delete(authorized, project.delete);
-
 router.route('/invitations')
   .get(authorized, project.getMyInvitations);
 
 router.route('/my-joined-projects')
   .get(authorized, project.myJoinedProjects);
+
+router.route('/:projectId')
+  .get(authorized, project.getSingleProject)
+  .patch(authorized, project.update)
+  .delete(authorized, project.delete);
 
 router.route('/')
   .get(authorized, project.myProjects)

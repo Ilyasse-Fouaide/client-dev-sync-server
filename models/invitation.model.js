@@ -14,10 +14,8 @@ const invitationSchema = new Schema({
     ref: 'users'
   },
   role: {
-    type: String,
-    required: false,
-    enum: ['client'],
-    default: 'client'
+    type: Types.ObjectId,
+    ref: 'user_projects_role'
   },
   status: {
     type: String,
