@@ -83,6 +83,7 @@ exports.create = tryCatchWrapper(async (req, res, next) => {
 exports.getSingleProject = tryCatchWrapper(async (req, res, next) => {
   const { projectId } = req.params;
   const { role, userId } = req.user;
+
   const projectObjectId = new Types.ObjectId(projectId);
   const userObjectId = new Types.ObjectId(userId);
 
@@ -95,8 +96,7 @@ exports.getSingleProject = tryCatchWrapper(async (req, res, next) => {
   const isMyOwnProject = userProject.user.toString() === userObjectId.toString()
   const isAdmin = role === 'admin'
 
-  // update here
-  // only admin can see other projects
+  // only admins can view all projects, while regular users can only view their own projects
   if (!isAdmin && !isMyOwnProject) {
     return next(Error.unAuthorized('You are not allowed to see this project'))
   }
@@ -117,6 +117,7 @@ exports.getSingleProject = tryCatchWrapper(async (req, res, next) => {
 exports.getProjectMembers = tryCatchWrapper(async (req, res, next) => {
   const { projectId } = req.params;
   const { userId, role } = req.user;
+
   const projectObjectId = new Types.ObjectId(projectId);
   const userObjectId = new Types.ObjectId(userId);
 
@@ -129,7 +130,7 @@ exports.getProjectMembers = tryCatchWrapper(async (req, res, next) => {
   const isMyOwnProject = userProject.user.toString() === userObjectId.toString()
   const isAdmin = role === 'admin'
 
-  // non admins role cannot see members of other projects
+  // only admins can see project members
   if (!isMyOwnProject && !isAdmin) return next(Error.unAuthorized('You are not member of this project'))
 
   const projectMembers = await UserProject
@@ -143,14 +144,24 @@ exports.getProjectMembers = tryCatchWrapper(async (req, res, next) => {
 exports.update = tryCatchWrapper(async (req, res, next) => {
   const { name, description, icon } = req.body;
   const { projectId } = req.params;
-  const { userId } = req.user;
+  const { userId, role } = req.user;
 
   const projectObjectId = new Types.ObjectId(projectId);
+  const userObjectId = new Types.ObjectId(userId);
 
-  // Check if the user is an owner of the project
-  const userProject = await UserProject.findOne({ user: userId, project: projectObjectId, role: 'owner' });
+  const userProject = await UserProject.findOne({ project: projectObjectId });
 
-  if (!userProject && req.user.role !== 'admin') return next(Error.unAuthorized('You are not authorized to update this project'));
+  if (!userProject) {
+    return next(Error.notFound('project not found'));
+  }
+
+  const isMyOwnProject = userProject.user.toString() === userObjectId.toString()
+  const isAdmin = role === 'admin'
+
+  // only admins can update all projects
+  if (!isAdmin && !isMyOwnProject) {
+    return next(Error.unAuthorized('You are not allowed to see this project'))
+  }
 
   const project = await Project.findByIdAndUpdate(projectId, {
     name, description, icon
@@ -163,14 +174,24 @@ exports.update = tryCatchWrapper(async (req, res, next) => {
 
 exports.delete = tryCatchWrapper(async (req, res, next) => {
   const { projectId } = req.params;
-  const { userId } = req.user;
+  const { userId, role } = req.user;
 
   const projectObjectId = new Types.ObjectId(projectId);
+  const userObjectId = new Types.ObjectId(userId);
 
-  // Check if the user is an owner of the project
-  const userProject = await UserProject.findOne({ user: userId, project: projectObjectId, role: 'owner' });
+  const userProject = await UserProject.findOne({ project: projectObjectId });
 
-  if (!userProject && req.user.role !== 'admin') return next(Error.unAuthorized('You are not authorized to delete this project'));
+  if (!userProject) {
+    return next(Error.notFound('project not found'));
+  }
+
+  const isMyOwnProject = userProject.user.toString() === userObjectId.toString()
+  const isAdmin = role === 'admin'
+
+  // only admins can delete all projects
+  if (!isAdmin && !isMyOwnProject) {
+    return next(Error.unAuthorized('You are not allowed to see this project'))
+  }
 
   const project = await Project.findByIdAndDelete(projectId);
 
