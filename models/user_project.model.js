@@ -10,10 +10,8 @@ const userProjectSchema = new Schema({
     ref: 'projects',
   },
   role: {
-    type: String,
-    required: false,
-    enum: ['owner', 'client'],
-    default: 'owner'
+    type: Types.ObjectId,
+    ref: 'user_projects_role',
   },
 }, { timestamps: true });
 
